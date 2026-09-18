@@ -1,0 +1,8 @@
+body { background-color: #0d1117; color: #c9d1d9; font-family: 'Courier New', monospace; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
+.container { text-align: center; border: 1px solid #30363d; padding: 40px; background-color: #161b22; box-shadow: 0 0 20px rgba(0,0,0,0.8); width: 600px; }
+h1 { color: #ff7b72; text-transform: uppercase; letter-spacing: 2px; }
+.nav-links { margin-bottom: 30px; }
+.nav-links a { color: #58a6ff; text-decoration: none; margin: 0 15px; font-weight: bold; }
+.nav-links a:hover { color: #79c0ff; text-decoration: underline; }
+.content-box { padding: 15px; border-left: 4px solid #3fb950; background-color: #0d1117; text-align: left; }
+ul { list-style-type: square; color: #79c0ff; }
