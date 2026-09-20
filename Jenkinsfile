@@ -8,7 +8,7 @@ pipeline {
             }
         }
 
-        stage('Build and Push Docker Image') {
+        stage('Build and Push Images') {
             steps {
                 withCredentials([
                     usernamePassword(
@@ -18,19 +18,28 @@ pipeline {
                     )
                 ]) {
                     sh '''
-                        IMAGE_NAME="$DOCKER_USER/urban-fantasy-app"
+                        FRONTEND_IMAGE="$DOCKER_USER/urban-fantasy-app"
+                        API_IMAGE="$DOCKER_USER/urban-fantasy-status-api"
 
-                        echo "Building Docker image..."
+                        echo "Building frontend image..."
                         docker build \
-                          -t "$IMAGE_NAME:$BUILD_NUMBER" \
-                          -t "$IMAGE_NAME:latest" .
+                          -t "$FRONTEND_IMAGE:$BUILD_NUMBER" \
+                          -t "$FRONTEND_IMAGE:latest" .
+
+                        echo "Building status API image..."
+                        docker build \
+                          -t "$API_IMAGE:$BUILD_NUMBER" \
+                          -t "$API_IMAGE:latest" ./status-api
 
                         echo "$DOCKER_TOKEN" | docker login \
                           -u "$DOCKER_USER" \
                           --password-stdin
 
-                        docker push "$IMAGE_NAME:$BUILD_NUMBER"
-                        docker push "$IMAGE_NAME:latest"
+                        docker push "$FRONTEND_IMAGE:$BUILD_NUMBER"
+                        docker push "$FRONTEND_IMAGE:latest"
+
+                        docker push "$API_IMAGE:$BUILD_NUMBER"
+                        docker push "$API_IMAGE:latest"
 
                         docker logout
                     '''
@@ -38,7 +47,7 @@ pipeline {
             }
         }
 
-        stage('Update GitOps Manifest') {
+        stage('Update GitOps Manifests') {
             steps {
                 withCredentials([
                     usernamePassword(
@@ -53,24 +62,29 @@ pipeline {
                     )
                 ]) {
                     sh '''
-                        IMAGE_NAME="$DOCKER_USER/urban-fantasy-app"
+                        FRONTEND_IMAGE="$DOCKER_USER/urban-fantasy-app"
+                        API_IMAGE="$DOCKER_USER/urban-fantasy-status-api"
 
                         git fetch origin main
                         git checkout -B main origin/main
 
                         sed -i -E \
-                          "s#image: .*/urban-fantasy-app:[^[:space:]]+#image: $IMAGE_NAME:$BUILD_NUMBER#" \
+                          "s#image: .*/urban-fantasy-app:[^[:space:]]+#image: $FRONTEND_IMAGE:$BUILD_NUMBER#" \
                           k8s/deployment.yaml
+
+                        sed -i -E \
+                          "s#image: .*/urban-fantasy-status-api:[^[:space:]]+#image: $API_IMAGE:$BUILD_NUMBER#" \
+                          k8s/status-api-deployment.yaml
 
                         git config user.name "Jenkins CI"
                         git config user.email "jenkins@urban-fantasy.local"
 
-                        git add k8s/deployment.yaml
+                        git add k8s/deployment.yaml k8s/status-api-deployment.yaml
 
                         if git diff --cached --quiet; then
                             echo "No manifest change required."
                         else
-                            git commit -m "[skip ci] Update image to build $BUILD_NUMBER"
+                            git commit -m "[skip ci] Update application images to build $BUILD_NUMBER"
 
                             set +x
                             git push "https://$GITHUB_USER:$GITHUB_TOKEN@github.com/pahanattx/urban-fantasy-app.git" main
@@ -84,7 +98,7 @@ pipeline {
 
     post {
         success {
-            echo 'CI build, Docker push, and GitOps manifest update completed successfully.'
+            echo 'Frontend and status API images built, pushed, and GitOps manifests updated successfully.'
         }
 
         failure {

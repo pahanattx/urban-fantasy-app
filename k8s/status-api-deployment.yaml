@@ -1,0 +1,31 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: urban-fantasy-status-api
+spec:
+  replicas: 1
+
+  selector:
+    matchLabels:
+      app: urban-fantasy-status-api
+
+  template:
+    metadata:
+      labels:
+        app: urban-fantasy-status-api
+
+    spec:
+      containers:
+        - name: status-api
+          image: ajaxatx/urban-fantasy-status-api:1
+
+          ports:
+            - containerPort: 8080
+
+          resources:
+            requests:
+              cpu: "25m"
+              memory: "32Mi"
+            limits:
+              cpu: "100m"
+              memory: "128Mi"
