@@ -5,10 +5,8 @@ metadata:
   annotations:
     nginx.org/ssl-redirect: "false"
     nginx.org/redirect-to-https: "false"
-
 spec:
   ingressClassName: nginx
-
   rules:
     - http:
         paths:
