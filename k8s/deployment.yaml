@@ -20,7 +20,7 @@ spec:
     spec:
       containers:
         - name: urban-fantasy-app
-          image: ajaxatx/urban-fantasy-app:6
+          image: ajaxatx/urban-fantasy-app:8
 
           ports:
             - containerPort: 80
